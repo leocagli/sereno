@@ -8,7 +8,7 @@
 
 | | |
 |---|---|
-| **Live site** | [sereno on Vercel](https://sereno.vercel.app) *(URL confirmed after deploy)* |
+| **Live site** | https://sereno-kappa-eight.vercel.app |
 | **Repository** | https://github.com/leocagli/sereno |
 | **Elevator pitch** | [ELEVATOR-PITCH.md](./ELEVATOR-PITCH.md) |
 | **Video script** | [PITCH.md](./PITCH.md) |
