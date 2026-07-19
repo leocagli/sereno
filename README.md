@@ -4,7 +4,7 @@
 
 > Named for the *sereno* — the night watchman of colonial Buenos Aires who walked the city at midnight and called *“¡…y sereno!”* when all was well.
 
-**MLH Midnight Hackathon — July 2026 · DeFi track**
+**MLH Midnight Hackathon — July 2026 · DeFi + AI tracks**
 
 | | |
 |---|---|
@@ -13,6 +13,7 @@
 | **Elevator pitch** | [ELEVATOR-PITCH.md](./ELEVATOR-PITCH.md) |
 | **Video script** | [PITCH.md](./PITCH.md) |
 | **Windows setup** | [SETUP.md](./SETUP.md) |
+| **Agent (AI)** | `cd cli && npm run agent:demo` |
 
 ---
 
@@ -105,8 +106,20 @@ cd contract && npm install && npm run build
 # CLI
 cd ../cli && npm install && npm run build
 npm run smoke          # local pure circuits
+npm run demo-sim       # offline corridor simulation
+npm run agent:demo     # AI agent (tools, no secret keys) — dual-track script
+npm run agent          # interactive agent REPL
 npm run start          # interactive preprod menu
 ```
+
+### Privacy-preserving agent (AI track)
+
+The agent is a **tool-using operator** over the Sereno corridor:
+
+- Tools: `deploy_corridor`, `shield`, `transfer`, `disclose_to_auditor`, `unshield`, `get_public_ledger`, `get_faucet_proof`
+- **Never returns secret keys** or note preimages — only public ledger fields and explicit audit disclosures
+- PureCircuits (`publicKey`, `noteCommitment`, `elGamalPublicKey`) are **real**; callTx path is **simulated** when wallet sync is unavailable
+- Natural language routing (ES/EN) without a cloud LLM (local policy agent) — optional LLM can wrap the same tools later
 
 Full Windows notes: **[SETUP.md](./SETUP.md)**.
 
