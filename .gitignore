@@ -11,3 +11,5 @@ Thumbs.db
 cli/logs/
 *.tsbuildinfo
 .playwright-cli/
+
+.vercel
