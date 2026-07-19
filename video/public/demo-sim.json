@@ -1,0 +1,161 @@
+{
+  "generatedAt": "2026-07-19T14:44:47.382Z",
+  "network": "preprod-simulated",
+  "realFaucetTx": "00bc9da4d80c86b1b7805df25384ef87228111e56734f94d64bf9f7ef148a141ab",
+  "wallet": "mn_addr_preprod1c2ljvsln2z5aca6nmd44skj72kmdavnm03vm9v3rwm37kclfnptsffuh6t",
+  "contractAddress": "0xsereno59e109829481e56b69e301a669835045247a1b89",
+  "amount": "1000",
+  "senderPk": "5a85e3dba72ae2ceda60d351a90b9ee0d94636b6223b0a05c3fdd15c11c1b249",
+  "recipientPk": "03e6a89cce83d3680f1c1e29a7f34911adcbaba0e605992d589071e0817ca217",
+  "shieldCommitment": "e1f90759801b62f218df7b5c3897e5893c46e092da41a1ae521794c4b4bb80f2",
+  "transferCommitment": "9a3ece02a28c3e63b02cdb3c5471f7f0ba80cbcca434c0cbceff1a0a36325ac5",
+  "nullifier": "7fe393398393a6cf919b46dfe502f4099c464362d92d60e43fb361f4c78b73fa",
+  "auditRequestId": "a8f11bd9eda674e1876d9b7ecfee21d2af0bed8e8cadd87242ed62c5e817df50",
+  "steps": [
+    {
+      "t": 1784472287362,
+      "title": "SERENO · simulated preprod demo",
+      "lines": [
+        "Network: preprod (simulated — pureCircuits are REAL)",
+        "Proof server: local (assumed)",
+        "Mode: offline simulation for video / judging"
+      ]
+    },
+    {
+      "t": 1784472287379,
+      "title": "1 · Personas",
+      "lines": [
+        "Sender Sereno address:    5a85e3dba72ae2ceda60d351a90b9ee0d94636b6223b0a05c3fdd15c11c1b249",
+        "Recipient Sereno address: 03e6a89cce83d3680f1c1e29a7f34911adcbaba0e605992d589071e0817ca217",
+        "Auditor pk.x:             1451415756701420609121646484…",
+        "Auditor pk.y:             1607874984586093693938391687…",
+        "Unshielded (funded):      mn_addr_preprod1c2ljvsln2z5aca6nmd44skj72kmdavnm03vm9v3rwm37kclfnptsffuh6t",
+        "Faucet tx:                00bc9da4d80c86b1b7805df25384ef87228111e56734f94d64bf9f7ef148a141ab"
+      ]
+    },
+    {
+      "t": 1784472287380,
+      "title": "2 · Deploy Sereno contract",
+      "lines": [
+        "constructor(auditorPublicKey) — sealed auditorPk on ledger",
+        "SIM deploy tx:            sim_deploy_9f3a3ba53ec5b4a5",
+        "Contract address:         0xsereno59e109829481e56b69e301a669835045247a1b89",
+        "Ledger: empty tree · TVL=0 · auditor sealed"
+      ],
+      "public": {
+        "contract": "0xsereno59e109829481e56b69e301a669835045247a1b89",
+        "tvl": "0"
+      }
+    },
+    {
+      "t": 1784472287380,
+      "title": "3 · shield(1000) — amount PUBLIC on entry",
+      "lines": [
+        "✓ amount disclosed into totalValueLocked",
+        "✓ note commitment:        e1f90759801b62f218df7b5c3897e5893c46e092da41a1ae521794c4b4bb80f2",
+        "✓ inserted into HistoricMerkleTree leaf 0",
+        "✓ TVL = 1000 (public)",
+        "  Interior of the note stays private (hiding commitment)",
+        "SIM shield tx:            sim_shield_bd9af3870afdd00e"
+      ],
+      "public": {
+        "action": "shield",
+        "amount": "1000",
+        "tvl": "1000",
+        "commitment": "e1f90759801b62f218df7b5c3897e5893c46e092da41a1ae521794c4b4bb80f2"
+      },
+      "private": {
+        "owner": "5a85e3dba72ae2ceda60d351a90b9ee0d94636b6223b0a05c3fdd15c11c1b249",
+        "mtIndex": "0"
+      }
+    },
+    {
+      "t": 1784472287381,
+      "title": "4 · transfer(recipientPk) — private to public",
+      "lines": [
+        "✓ spent note membership proved (Merkle path)",
+        "✓ nullifier published:    7fe3933983…8b73fa  (unlinkable without sk)",
+        "✓ output commitment:      9a3ece02a28c3e63b02cdb3c5471f7f0ba80cbcca434c0cbceff1a0a36325ac5",
+        "✓ ElGamal ciphertext → auditorPk (in-circuit, amount hidden from public)",
+        "✓ TVL unchanged (1-in/1-out same amount)",
+        "  Off-band: send amount + randomness + mtIndex to recipient",
+        "SIM transfer tx:          sim_transfer_7868e4e9ccf2c0c9"
+      ],
+      "public": {
+        "action": "transfer",
+        "nullifier": "7fe393398393a6cf919b46dfe502f4099c464362d92d60e43fb361f4c78b73fa",
+        "outCommitment": "9a3ece02a28c3e63b02cdb3c5471f7f0ba80cbcca434c0cbceff1a0a36325ac5",
+        "tvl": "1000",
+        "auditorCiphertext": "ElGamal(c1,c2) on ledger"
+      },
+      "private": {
+        "recipient": "03e6a89cce83d3680f1c1e29a7f34911adcbaba0e605992d589071e0817ca217",
+        "amount": "1000 (only auditor + parties)"
+      }
+    },
+    {
+      "t": 1784472287381,
+      "title": "5 · Public ledger view",
+      "lines": [
+        "totalValueLocked:         1000",
+        "commitments:              root=… nextLeaf=2",
+        "nullifiers:               1 entry",
+        "transferCiphertexts:      1 entry (auditor-only decrypt)",
+        "auditDisclosures:         empty",
+        "  Public sees NO individual transfer amounts"
+      ],
+      "public": {
+        "tvl": "1000",
+        "nullifiers": "1",
+        "transferCiphertexts": "1",
+        "auditDisclosures": "0"
+      }
+    },
+    {
+      "t": 1784472287381,
+      "title": "6 · discloseToAuditor(requestId) — selective disclosure",
+      "lines": [
+        "audit request id:         a8f11bd9eda674e1876d9b7ecfee21d2af0bed8e8cadd87242ed62c5e817df50",
+        "✓ owner proves commitment opens to amount=1000",
+        "✓ recorded on-ledger under request id",
+        "✓ note NOT spent (still spendable)",
+        "  Only what was asked — only under this request",
+        "SIM disclose tx:          sim_disclose_f064743b19374f81"
+      ],
+      "public": {
+        "action": "discloseToAuditor",
+        "requestId": "a8f11bd9eda674e1876d9b7ecfee21d2af0bed8e8cadd87242ed62c5e817df50",
+        "amount": "1000",
+        "commitment": "9a3ece02a28c3e63b02cdb3c5471f7f0ba80cbcca434c0cbceff1a0a36325ac5"
+      }
+    },
+    {
+      "t": 1784472287381,
+      "title": "7 · unshield() — amount PUBLIC on exit",
+      "lines": [
+        "✓ note spent · amount 1000 disclosed",
+        "✓ TVL = 0",
+        "  Accountable edge complete",
+        "SIM unshield tx:          sim_unshield_b737da57ee81e139"
+      ],
+      "public": {
+        "action": "unshield",
+        "amount": "1000",
+        "tvl": "0"
+      }
+    },
+    {
+      "t": 1784472287382,
+      "title": "DONE · Sereno simulated corridor",
+      "lines": [
+        "Real: pureCircuits (publicKey, noteCommitment, elGamalPublicKey)",
+        "Real: compiled circuits shield/transfer/unshield/discloseToAuditor",
+        "Real: preprod faucet funding (see README)",
+        "Sim:  deploy / callTx finality (wallet sync blocked on public RPC)",
+        "",
+        "Repo:  https://github.com/leocagli/sereno",
+        "Site:  https://sereno-kappa-eight.vercel.app"
+      ]
+    }
+  ]
+}
