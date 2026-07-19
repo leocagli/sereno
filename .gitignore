@@ -1,0 +1,13 @@
+node_modules/
+dist/
+logs/
+*.log
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+.vercel
+cli/logs/
+*.tsbuildinfo
+.playwright-cli/

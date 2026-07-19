@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "buildCommand": null,
+  "outputDirectory": "web",
+  "installCommand": null,
+  "framework": null,
+  "rewrites": [{ "source": "/(.*)", "destination": "/$1" }]
+}

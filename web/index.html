@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sereno — Private remittances, accountable edges · Midnight</title>
+  <meta name="description" content="Sereno is a shielded remittance corridor on Midnight Network: private in the middle, public at the edges, with selective auditor disclosure. Built for MLH Midnight Hackathon July 2026." />
+  <meta property="og:title" content="Sereno · Midnight Hackathon" />
+  <meta property="og:description" content="Send money home without publishing your life. Regulators get proofs — not a black box." />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=IBM+Plex+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="sky" aria-hidden="true"></div>
+  <div class="lantern-glow" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <a class="mark" href="#top">
+      <span class="mark-bell" aria-hidden="true">🔔</span>
+      <span class="mark-text">Sereno</span>
+    </a>
+    <nav>
+      <a href="#how">How it works</a>
+      <a href="#proof">On-chain proof</a>
+      <a href="#pitch">Pitch</a>
+      <a class="nav-cta" href="https://github.com/leocagli/sereno" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <p class="eyebrow fade-up">MLH Midnight Hackathon · July 2026 · DeFi track</p>
+      <h1 class="fade-up delay-1">
+        <span class="line">¡…y sereno!</span>
+        <span class="line soft">Private rails.</span>
+        <span class="line soft">Accountable edges.</span>
+      </h1>
+      <p class="lede fade-up delay-2">
+        Named for the colonial <em>sereno</em> of Buenos Aires — the night watchman who walked the city at midnight
+        and called that all was well. Sereno is a shielded remittance corridor on
+        <strong>Midnight</strong>: families keep their privacy; designated auditors get cryptographic answers, not a spreadsheet of everyone.
+      </p>
+      <div class="hero-actions fade-up delay-3">
+        <a class="btn primary" href="https://github.com/leocagli/sereno" target="_blank" rel="noopener">Open repository</a>
+        <a class="btn ghost" href="#proof">See transaction proof</a>
+      </div>
+      <dl class="hero-meta fade-up delay-4">
+        <div>
+          <dt>Network</dt>
+          <dd>Midnight Preprod</dd>
+        </div>
+        <div>
+          <dt>Language</dt>
+          <dd>Compact 0.23 · Halo2</dd>
+        </div>
+        <div>
+          <dt>Circuits</dt>
+          <dd>shield · transfer · unshield · disclose</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="band problem" id="problem">
+      <div class="band-inner">
+        <h2>The false choice</h2>
+        <div class="split">
+          <article class="card bad">
+            <h3>Formal rails</h3>
+            <p>High fees, slow settlement, total surveillance. Every counterparty and amount becomes someone else’s data exhaust.</p>
+          </article>
+          <article class="card bad">
+            <h3>Informal rails</h3>
+            <p>Cash couriers and opaque P2P. No compliance story, no consumer protection — and a growing regulatory target.</p>
+          </article>
+        </div>
+        <p class="band-close">Neither extreme is acceptable for LatAm remittances. Sereno draws a third line.</p>
+      </div>
+    </section>
+
+    <section class="band how" id="how">
+      <div class="band-inner">
+        <p class="eyebrow">Architecture</p>
+        <h2>Private in the middle.<br />Public only where it must be.</h2>
+        <ol class="stages">
+          <li>
+            <span class="stage-tag">shield</span>
+            <strong>Entry is accountable</strong>
+            <p>Deposit amount is public. A hiding note commitment lands in a Merkle tree. TVL increases.</p>
+          </li>
+          <li>
+            <span class="stage-tag private">transfer</span>
+            <strong>Interior is private</strong>
+            <p>Public sees commitment + nullifier only. Auditor gets an in-circuit ElGamal ciphertext of the amount.</p>
+          </li>
+          <li>
+            <span class="stage-tag">unshield</span>
+            <strong>Exit is accountable</strong>
+            <p>Withdrawal amount is disclosed. Note is spent. TVL decreases.</p>
+          </li>
+          <li>
+            <span class="stage-tag audit">disclose</span>
+            <strong>Audit on request</strong>
+            <p>Owner proves in-circuit that a commitment opens to a concrete amount — keyed by audit request id. Note not spent.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="band proof" id="proof">
+      <div class="band-inner">
+        <p class="eyebrow">Live network · Preprod</p>
+        <h2>Proof of transactions</h2>
+        <p class="section-lede">Hackathon demo wallet funded on Midnight Preprod. Use these artifacts for judging.</p>
+
+        <div class="proof-grid">
+          <article class="proof-card featured">
+            <span class="proof-label">Faucet funding · tNIGHT</span>
+            <h3>5,000 tNIGHT received</h3>
+            <p class="mono wrap" id="tx-hash">00bc9da4d80c86b1b7805df25384ef87228111e56734f94d64bf9f7ef148a141ab</p>
+            <div class="proof-links">
+              <a href="https://preprod.midnightexplorer.com/" target="_blank" rel="noopener">Midnight Explorer ↗</a>
+              <a href="https://midnight-preprod.subscan.io/" target="_blank" rel="noopener">Subscan Preprod ↗</a>
+              <button type="button" class="copy" data-copy="00bc9da4d80c86b1b7805df25384ef87228111e56734f94d64bf9f7ef148a141ab">Copy tx hash</button>
+            </div>
+          </article>
+
+          <article class="proof-card">
+            <span class="proof-label">Unshielded wallet</span>
+            <p class="mono wrap" id="wallet-addr">mn_addr_preprod1c2ljvsln2z5aca6nmd44skj72kmdavnm03vm9v3rwm37kclfnptsffuh6t</p>
+            <button type="button" class="copy" data-copy="mn_addr_preprod1c2ljvsln2z5aca6nmd44skj72kmdavnm03vm9v3rwm37kclfnptsffuh6t">Copy address</button>
+          </article>
+
+          <article class="proof-card">
+            <span class="proof-label">Contract toolchain</span>
+            <ul class="plain">
+              <li>Compact compiler <strong>0.31.1</strong></li>
+              <li>4 circuits compiled with prover/verifier keys</li>
+              <li>Local proof server · Docker · port 6300</li>
+            </ul>
+          </article>
+        </div>
+
+        <aside class="note">
+          <strong>Scope note for judges:</strong> Application circuits (<code>shield</code> / <code>transfer</code> / <code>unshield</code> / <code>discloseToAuditor</code>) compile and pure-circuit smoke tests pass.
+          Full callTx deploy on preprod is gated by wallet-sdk sync stability against the public RPC — funding and proof artifacts above are live on preprod.
+        </aside>
+      </div>
+    </section>
+
+    <section class="band pitch" id="pitch">
+      <div class="band-inner">
+        <p class="eyebrow">Elevator pitch · ~30 seconds</p>
+        <blockquote>
+          <p>
+            “Latin American remittances force a bad trade: surveillance or the black market.
+            <strong>Sereno</strong> is a shielded corridor on Midnight — private transfers in the middle,
+            public amounts only when money enters or leaves the pool, and a designated auditor who can
+            decrypt transfer amounts or request an in-circuit note opening. Named for the night watchman
+            of Buenos Aires who called ‘y sereno’ at midnight: order without turning on every light.”
+          </p>
+        </blockquote>
+        <div class="pitch-grid">
+          <div>
+            <h3>Why Midnight</h3>
+            <p>Compact makes commitments, Merkle trees, and private witnesses first-class. Client-side proving; the chain never sees interior amounts except at deliberate edges.</p>
+          </div>
+          <div>
+            <h3>Why now</h3>
+            <p>Argentina’s Ley 27.739 puts VASPs under UIF reporting. Compliance-by-design beats “hold everyone’s data forever.”</p>
+          </div>
+          <div>
+            <h3>What we shipped</h3>
+            <p>Full Compact contract + TypeScript CLI + Windows/WSL runbook + this site. Apache-2.0.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band cta" id="repo">
+      <div class="band-inner cta-box">
+        <h2>Clone, compile, prove.</h2>
+        <p class="mono">git clone https://github.com/leocagli/sereno.git</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="https://github.com/leocagli/sereno" target="_blank" rel="noopener">GitHub · leocagli/sereno</a>
+          <a class="btn ghost" href="https://github.com/leocagli/sereno/blob/main/SETUP.md" target="_blank" rel="noopener">SETUP.md (WSL2)</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Sereno · MLH Midnight Hackathon 2026 · Built with Compact on Midnight Network</p>
+    <p class="foot-soft">“¡Las doce han dado… y sereno!”</p>
+  </footer>
+
+  <div class="toast" id="toast" hidden>Copied</div>
+  <script src="app.js"></script>
+</body>
+</html>

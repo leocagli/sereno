@@ -1,0 +1,272 @@
+// sereno.compact — Sereno: a shielded remittance corridor with selective
+// auditor disclosure, written in Compact for the Midnight network.
+//
+// Cryptographic lineage:
+//   * Note / commitment / nullifier lifecycle: Zerocash (Ben-Sasson et al., 2014).
+//   * Auditor-directed openings of notes: Zcash viewing keys.
+//   * Accountable privacy boundary (public amounts at the edges of the pool,
+//     provable openings on demand): Privacy Pools whitepaper (2023).
+//
+// Privacy model:
+//   * Amounts entering (shield) and leaving (unshield) the pool are PUBLIC.
+//     These are the "accountable edges" of the corridor.
+//   * In-pool transfers reveal ONLY a fresh commitment, a nullifier, and an
+//     auditor-only ElGamal ciphertext of the amount. No amounts, balances or
+//     counterparties are revealed to the public.
+//   * The auditor (key fixed at deploy time) can:
+//       (a) receive on-demand, in-circuit-proven note openings via
+//           discloseToAuditor (Privacy Pools style, under a legal request), and
+//       (b) decrypt the per-transfer exponential-ElGamal ciphertexts of
+//           transferred amounts (Zcash viewing-key style). Nobody else can.
+//
+// Scope note: this contract keeps its own note pool at the application layer;
+// it does NOT move native shielded tokens (receiveShielded / sendShielded).
+// Wiring real tDUST/shielded-token custody into shield/unshield is documented
+// as the next step in the README roadmap.
+
+pragma language_version 0.23;
+
+import CompactStandardLibrary;
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+// A private note: the preimage of a commitment stored in the on-chain tree.
+// Held off-chain by its owner (witness-provided), never published as-is.
+export struct Note {
+  amount: Uint<64>;
+  randomness: Bytes<32>;
+}
+
+// A note opening registered for the auditor under a specific audit request.
+export struct AuditRecord {
+  commitment: Bytes<32>;
+  amount: Uint<64>;
+}
+
+// Exponential-ElGamal ciphertext over the embedded Jubjub curve:
+//   c1 = g^r,  c2 = auditorPk^r + g^amount   (additive notation).
+// The auditor recovers g^amount = c2 - sk*c1 and solves the bounded discrete
+// log (amounts are remittance-sized), as in classic auditable-payments schemes.
+export struct ElGamalCiphertext {
+  c1: JubjubPoint;
+  c2: JubjubPoint;
+}
+
+// ---------------------------------------------------------------------------
+// Public on-chain state
+// ---------------------------------------------------------------------------
+
+// Note commitments. HistoricMerkleTree so that a proof built against a recent
+// root stays valid after later insertions (checkRoot accepts any past root).
+// Depth 10 => up to 1024 notes, plenty for a hackathon corridor.
+export ledger commitments: HistoricMerkleTree<10, Bytes<32>>;
+
+// Spent-note nullifiers (Zerocash-style anti double-spend). Deriving a
+// nullifier requires the owner's secret key, so only the owner can spend,
+// and spending the same note twice yields the same nullifier.
+export ledger nullifiers: Set<Bytes<32>>;
+
+// The auditor's ElGamal public key on Jubjub (auditorPk = g^auditorSk),
+// fixed at deploy. sealed => only the constructor may ever write it.
+export sealed ledger auditorPk: JubjubPoint;
+
+// On-demand selective disclosures: auditRequestId -> proven note opening.
+export ledger auditDisclosures: Map<Bytes<32>, AuditRecord>;
+
+// Auditor-only amount ciphertexts, one per transfer, keyed by the commitment
+// of the output note the transfer created.
+export ledger transferCiphertexts: Map<Bytes<32>, ElGamalCiphertext>;
+
+// Public accountable metric: total value currently held inside the pool.
+// Grows on shield, shrinks on unshield; transfers preserve it by construction.
+export ledger totalValueLocked: Uint<64>;
+
+// ---------------------------------------------------------------------------
+// Constructor
+// ---------------------------------------------------------------------------
+
+// The auditor generates a Jubjub keypair off-chain (see the exported pure
+// circuit elGamalPublicKey, callable from TypeScript via pureCircuits) and the
+// deployer passes the public point here. Constructor arguments are witness-like
+// for the disclosure analysis, hence the explicit disclose().
+constructor(auditorPublicKey: JubjubPoint) {
+  auditorPk = disclose(auditorPublicKey);
+}
+
+// ---------------------------------------------------------------------------
+// Witnesses (off-chain private data; NEVER trusted — everything a witness
+// returns is re-validated in-circuit before it can touch public state)
+// ---------------------------------------------------------------------------
+
+// The caller's spending secret key.
+witness ownerSecretKey(): Bytes<32>;
+
+// The note (amount + randomness) targeted by the current call. The circuit
+// re-derives its commitment and checks Merkle membership, so a lying witness
+// simply fails the proof.
+witness activeNote(): Note;
+
+// Fresh 32-byte randomness for the output note being created.
+witness newNoteRandomness(): Bytes<32>;
+
+// Merkle authentication path for a commitment. Built in TypeScript with the
+// compiler-generated ledger API (pathForLeaf / findPathForLeaf), exactly as
+// the official docs prescribe for MerkleTreePath witnesses.
+witness findNotePath(commitment: Bytes<32>): MerkleTreePath<10, Bytes<32>>;
+
+// Fresh random Field scalar for the ElGamal encryption nonce.
+witness elGamalNonce(): Field;
+
+// ---------------------------------------------------------------------------
+// Pure helper circuits
+// ---------------------------------------------------------------------------
+
+// Owner public key = domain-separated hash of the secret key. Exported pure
+// so the dApp can compute a user's Sereno address from TypeScript
+// (pureCircuits.publicKey) and share it with senders off-band.
+export pure circuit publicKey(sk: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<2, Bytes<32>>>([pad(32, "Sereno:owner:pk"), sk]);
+}
+
+// Note commitment: hiding + binding via persistentCommit (SHA-256 based,
+// stable across contract upgrades). The amount is cast to Bytes<32>
+// (little-endian) so the committed vector has a uniform element type.
+// Exported pure so the dApp can track expected commitments from TypeScript.
+export pure circuit noteCommitment(
+  amount: Uint<64>,
+  ownerPk: Bytes<32>,
+  randomness: Bytes<32>
+): Bytes<32> {
+  return persistentCommit<Vector<2, Bytes<32>>>([amount as Bytes<32>, ownerPk], randomness);
+}
+
+// Deterministic nullifier: requires the secret key (only the owner can derive
+// it) and the note's randomness (unique per note). Distinct domain separator
+// from the commitment/pk hashes, as the official notes pattern mandates.
+circuit noteNullifier(sk: Bytes<32>, randomness: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<3, Bytes<32>>>([pad(32, "Sereno:nullifier"), sk, randomness]);
+}
+
+// Auditor key derivation: auditorPk = g^sk on Jubjub. Exported pure so the
+// auditor tooling can derive the deploy-time public point via pureCircuits.
+export pure circuit elGamalPublicKey(sk: Field): JubjubPoint {
+  return ecMulGenerator(sk);
+}
+
+// ---------------------------------------------------------------------------
+// Internal spend check (shared by transfer / unshield)
+// ---------------------------------------------------------------------------
+
+// Proves the caller owns an unspent note in the tree and marks it spent.
+// Returns the note so callers can reuse its amount. Steps:
+//   1. Re-derive the commitment from the witness-provided preimage — binds
+//      amount/randomness/owner to the on-chain leaf.
+//   2. Check the witness-provided Merkle path opens THAT commitment (leaf
+//      equality) to an accepted (possibly historic) root.
+//   3. Derive the nullifier from the secret key and reject double spends.
+// The nullifier is the only value published, and it is unlinkable to the
+// commitment without the secret key — hence the explicit disclose() on it.
+circuit consumeActiveNote(): Note {
+  const sk = ownerSecretKey();
+  const note = activeNote();
+
+  const cm = noteCommitment(note.amount, publicKey(sk), note.randomness);
+  const path = findNotePath(cm);
+  assert(path.leaf == cm, "merkle path does not open the spent note commitment");
+  // checkRoot is a ledger read: path (witness) → root must be disclosed for the analysis.
+  assert(
+    commitments.checkRoot(disclose(merkleTreePathRoot<10, Bytes<32>>(path))),
+    "spent note is not in the commitment tree"
+  );
+
+  // Nullifier is intentionally public (anti double-spend; unlinkable without sk).
+  const nul = disclose(noteNullifier(sk, note.randomness));
+  assert(!nullifiers.member(nul), "note already spent");
+  nullifiers.insert(nul);
+
+  return note;
+}
+
+// ---------------------------------------------------------------------------
+// Entry points
+// ---------------------------------------------------------------------------
+
+// shield: deposit into the pool. The amount is deliberately PUBLIC on entry
+// (accountable edge, Privacy Pools style) — hence disclose(amount) into the
+// public TVL. The resulting note is private: its commitment is hiding thanks
+// to the fresh witness randomness, and persistentCommit outputs are exempt
+// from the disclosure analysis by design.
+export circuit shield(amount: Uint<64>): [] {
+  const sk = ownerSecretKey();
+  const rand = newNoteRandomness();
+  const cm = noteCommitment(amount, publicKey(sk), rand);
+  commitments.insert(cm);
+  totalValueLocked = ((totalValueLocked + disclose(amount)) as Uint<64>);
+}
+
+// transfer: spend one owned note, create one note of the SAME amount for the
+// recipient (1-in/1-out full-note transfer — value conservation is trivial
+// because the output amount is byte-identical to the input amount in-circuit;
+// splits/change are roadmap). recipientPk is the recipient's Sereno public key
+// (publicKey(sk)), shared off-band; the note preimage (amount, randomness)
+// must also be sent to the recipient off-band so they can spend it later.
+//
+// Auditor lane: the transferred amount is encrypted to auditorPk with
+// exponential ElGamal computed IN-CIRCUIT, so the ciphertext is guaranteed to
+// encrypt the true amount of the output note. disclose() on the ciphertext is
+// safe: ElGamal hides the amount from everyone but the auditor.
+export circuit transfer(recipientPk: Bytes<32>): [] {
+  const note = consumeActiveNote();
+
+  // Output note for the recipient (commitment is hiding => no disclose needed).
+  const outRand = newNoteRandomness();
+  const outCm = noteCommitment(note.amount, recipientPk, outRand);
+  commitments.insert(outCm);
+
+  // Exponential ElGamal to the auditor: c1 = g^r, c2 = pk^r + g^amount.
+  const r = elGamalNonce();
+  const c1 = ecMulGenerator(r);
+  const c2 = ecAdd(ecMul(auditorPk, r), ecMulGenerator(note.amount as Field));
+  transferCiphertexts.insert(outCm, disclose(ElGamalCiphertext { c1: c1, c2: c2 }));
+}
+
+// unshield: withdraw from the pool. Opens (consumes) one owned note and
+// reveals its amount publicly — the second accountable edge. The disclose()
+// calls are the explicit declaration of that deliberate revelation.
+// TVL cannot underflow: every note's amount was previously added on shield
+// and transfers preserve amounts exactly.
+export circuit unshield(): Uint<64> {
+  const note = consumeActiveNote();
+  totalValueLocked = ((totalValueLocked - disclose(note.amount)) as Uint<64>);
+  return disclose(note.amount);
+}
+
+// discloseToAuditor: selective disclosure under an audit request. The note
+// owner proves IN-CIRCUIT that a commitment present in the tree opens to a
+// concrete amount, and registers that opening under the auditor's request id.
+// The note is NOT spent (no nullifier): this is an audit, not a payment.
+// Only the owner can produce this proof (the commitment binds ownerPk =
+// H(sk)), which is exactly the Zcash viewing-key / Privacy Pools pattern:
+// privacy by default, provable transparency on demand.
+export circuit discloseToAuditor(auditRequestId: Bytes<32>): [] {
+  const sk = ownerSecretKey();
+  const note = activeNote();
+
+  const cm = noteCommitment(note.amount, publicKey(sk), note.randomness);
+  const path = findNotePath(cm);
+  assert(path.leaf == cm, "merkle path does not open the audited note commitment");
+  assert(
+    commitments.checkRoot(disclose(merkleTreePathRoot<10, Bytes<32>>(path))),
+    "audited note is not in the commitment tree"
+  );
+
+  // auditRequestId is public by design (keys the on-ledger disclosure record).
+  const reqId = disclose(auditRequestId);
+  assert(!auditDisclosures.member(reqId), "audit request already answered");
+  auditDisclosures.insert(
+    reqId,
+    disclose(AuditRecord { commitment: cm, amount: note.amount })
+  );
+}
