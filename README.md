@@ -8,12 +8,17 @@
 
 | | |
 |---|---|
+| **Demo video (90s)** | _YouTube link — see Devpost submission_ |
 | **Live site** | https://sereno-kappa-eight.vercel.app |
 | **Repository** | https://github.com/leocagli/sereno |
 | **Elevator pitch** | [ELEVATOR-PITCH.md](./ELEVATOR-PITCH.md) |
 | **Video script** | [PITCH.md](./PITCH.md) |
 | **Windows setup** | [SETUP.md](./SETUP.md) |
 | **Agent (AI)** | `cd cli && npm run agent:demo` |
+
+![Sereno — MLH Midnight Hackathon July 2026](docs/video-title.png)
+
+![Shield and private transfer — real commitments and nullifiers](docs/video-demo.png)
 
 ---
 
